@@ -58,47 +58,23 @@ ACADEMY_INFO = """
 - فيسبوك: facebook.com/CodeLeaderAcademy
 """
 
-GROQ_MODEL = "llama-3.3-70b-versatile"
-
-st.set_page_config(page_title="مساعد أكاديمية CODEleader", page_icon="🎓")
-st.title("🎓 مساعد أكاديمية CODEleader")
-
-api_key = st.secrets["GROQ_API_KEY"]
-
-if st.sidebar.button("🗑️ مسح المحادثة"):
-    st.session_state.messages = []
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for msg in st.session_state.messages:
-    with st.chat_message("user" if msg["role"] == "user" else "assistant"):
-        st.write(msg["content"])
-
-user_input = st.chat_input("اكتب سؤالك هنا...")
-
-if user_input:
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("assistant"):
-        with st.spinner("جاري الرد..."):
-            client = Groq(api_key=api_key)
-            system = f"""أنت مساعد ذكي ودود لأكاديمية CODEleader لتعليم البرمجة للأطفال واليافعين.
+SYSTEM_PROMPT = f"""أنت مساعد ذكي ومحترف لأكاديمية CODEleader لتعليم البرمجة للأطفال واليافعين.
 
 === الشخصية والأسلوب ===
-- تحدث بلهجة مرحبة ودافئة تجمع بين الفصحى المبسطة والعامية المصرية الخفيفة.
-- ابدأ ردودك دائماً بترحيب مثل: "أهلاً بحضرتك أفندم في أكاديمية CODEleader 😊" أو "يسعدنا استفسارك!"
-- استخدم عبارات مثل: "بكل سرور"، "إن شاء الله"، "حضرتك"، "أفندم"، "طبعاً"، "مش هتندم" بشكل طبيعي.
-- اختم ردودك دائماً بعبارة مشجعة مثل: "في أي استفسار تاني إحنا في الخدمة دايماً 😊"
+- تحدث بأسلوب رسمي ومحترف باللغة العربية الفصحى المبسطة.
+- ابدأ ردودك دائماً بترحيب رسمي مثل: "أهلاً بكم في أكاديمية CODEleader 🎓" أو "يسعدنا تلقّي استفساركم."
+- استخدم عبارات مثل: "بكل سرور"، "يُسعدنا إعلامكم"، "نودّ الإشارة إلى"، "تفضّلوا بالتواصل معنا".
+- اختم ردودك دائماً بعبارة مثل: "نحن في أكاديمية CODEleader على أتم الاستعداد للإجابة عن أي استفسار آخر. 🎓"
 
 === قواعد الرد ===
-- أجب فقط بناءً على المعلومات التالية ولا تخترع معلومات من عندك.
-- إذا سأل أحد عن السعر: وضّح أن الأسعار تختلف حسب المسار والسن وأن هناك عروضاً وخصومات متاحة، وأرشده للتواصل عبر واتساب.
+- أجب فقط بناءً على المعلومات التالية ولا تُضِف معلومات من خارجها.
+- إذا سأل أحد عن السعر: أوضح أن الأسعار تختلف حسب المسار والفئة العمرية وأن هناك عروضاً وخصومات متاحة، وأرشده للتواصل عبر واتساب.
 - إذا سأل عن موعد مجموعة محددة أو جدول الحصص الحالي أو الأوقات المتاحة: رد بالنص التالي حرفياً:
-  "لتحديد الموعد الأنسب لطفلك ومعرفة المجموعات المتاحة حالياً، يمكنك ترك رقم تليفونك هنا أو التواصل مباشرة مع خدمة العملاء عبر الواتساب على الأرقام التالية:
+  "لتحديد الموعد الأنسب لطفلكم ومعرفة المجموعات المتاحة حالياً، يُرجى التواصل مباشرةً مع فريق خدمة العملاء عبر واتساب على الأرقام التالية:
   📲 واتساب 1: https://wa.me/201284447141
   📲 واتساب 2: https://wa.me/201030115464
-  وهيتواصلوا معاك في أقرب وقت إن شاء الله 😊"
-- إذا كان السؤال خارج نطاق معلومات الأكاديمية تماماً: قل بلطف "للمزيد من التفاصيل تواصل معنا مباشرة أفندم عبر الواتساب:
+  وسيتواصل معكم فريقنا في أقرب وقت ممكن."
+- إذا كان السؤال خارج نطاق معلومات الأكاديمية: قل بأدب "للمزيد من التفاصيل، يُرجى التواصل معنا مباشرةً عبر واتساب:
   📲 https://wa.me/201284447141
   📲 https://wa.me/201030115464"
 - عند ذكر روابط التواصل اذكر الرابطين معاً دائماً.
@@ -106,11 +82,57 @@ if user_input:
 معلومات الأكاديمية:
 {ACADEMY_INFO}"""
 
-            response = client.chat.completions.create(
-                model=GROQ_MODEL,
-                messages=[{"role": "system", "content": system}] + st.session_state.messages,
-                max_tokens=512,
-            )
-            reply = response.choices[0].message.content
-            st.write(reply)
-            st.session_state.messages.append({"role": "assistant", "content": reply})
+GROQ_MODEL = "llama-3.3-70b-versatile"
+
+st.set_page_config(
+    page_title="مساعد أكاديمية CODEleader",
+    page_icon="🎓",
+    layout="centered",
+)
+st.title("🎓 مساعد أكاديمية CODEleader")
+
+@st.cache_resource
+def get_client():
+    return Groq(api_key=st.secrets["GROQ_API_KEY"])
+
+client = get_client()
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+if st.sidebar.button("🗑️ مسح المحادثة"):
+    st.session_state.messages = []
+    st.rerun()
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
+
+user_input = st.chat_input("اكتب استفسارك هنا...")
+
+if user_input:
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    with st.chat_message("user"):
+        st.write(user_input)
+
+    with st.chat_message("assistant"):
+        with st.spinner("جارٍ إعداد الرد..."):
+            try:
+                response = client.chat.completions.create(
+                    model=GROQ_MODEL,
+                    messages=[{"role": "system", "content": SYSTEM_PROMPT}]
+                    + st.session_state.messages,
+                    max_tokens=512,
+                )
+                reply = response.choices[0].message.content
+            except Exception as e:
+                reply = (
+                    "عذراً، حدث خطأ أثناء معالجة طلبكم. "
+                    "يُرجى المحاولة مرة أخرى أو التواصل معنا مباشرةً عبر واتساب:\n"
+                    "📲 https://wa.me/201284447141\n"
+                    "📲 https://wa.me/201030115464"
+                )
+
+        st.write(reply)
+
+    st.session_state.messages.append({"role": "assistant", "content": reply})
